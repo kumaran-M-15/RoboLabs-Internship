@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OCR Tool — Extract Text from Images</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: rgba(255,255,255,0.08);
+      --border-hover: rgba(255,255,255,0.18);
+      --accent: #6c63ff;
+      --accent-glow: rgba(108,99,255,0.25);
+      --accent-light: #a89fff;
+      --text: #e8e6f0;
+      --text-muted: #8b88a8;
+      --success: #3ecf8e;
+      --error: #f87171;
+      --json-key: #a89fff;
+      --json-str: #3ecf8e;
+      --json-num: #f9a94b;
+      --json-bool: #60b8ff;
+      --radius: 14px;
+      --radius-sm: 8px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    header {
+      width: 100%;
+      max-width: 860px;
+      padding: 48px 24px 32px;
+      text-align: center;
+    }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon svg { width: 22px; height: 22px; fill: white; }
+    .logo-text { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+    h1 { font-size: 36px; font-weight: 700; letter-spacing: -1px; line-height: 1.15; margin-bottom: 10px; }
+    h1 span { color: var(--accent-light); }
+    .subtitle { font-size: 15px; color: var(--text-muted); }
+
+    /* ── Main layout ────────────────────────────────────────────── */
+    main {
+      width: 100%;
+      max-width: 860px;
+      padding: 0 24px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* ── Upload zone ────────────────────────────────────────────── */
+    .upload-zone {
+      border: 2px dashed var(--border-hover);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 52px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: var(--surface2);
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-icon {
+      width: 56px; height: 56px;
+      background: var(--surface2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .upload-icon svg { width: 28px; height: 28px; stroke: var(--accent-light); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .upload-title { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+    .upload-sub { font-size: 13px; color: var(--text-muted); }
+    .upload-sub strong { color: var(--accent-light); font-weight: 500; }
+    .format-pills {
+      display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 6px; margin-top: 16px;
+    }
+    .pill {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.4px;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text-muted); padding: 3px 9px; border-radius: 20px;
+      text-transform: uppercase;
+    }
+
+    /* ── Preview panel ──────────────────────────────────────────── */
+    .preview-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .preview-panel.visible { display: block; }
+    .preview-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .preview-header-left { display: flex; align-items: center; gap: 10px; }
+    .file-thumb {
+      width: 36px; height: 36px; border-radius: 6px; object-fit: cover;
+      background: var(--surface2);
+    }
+    .file-name { font-size: 14px; font-weight: 500; }
+    .file-size { font-size: 12px; color: var(--text-muted); }
+    .btn-change {
+      font-size: 12px; color: var(--accent-light); background: none;
+      border: 1px solid rgba(108,99,255,0.3); border-radius: var(--radius-sm);
+      padding: 5px 12px; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-change:hover { background: var(--accent-glow); }
+    .preview-img-wrap {
+      background: #0a0c12;
+      display: flex; align-items: center; justify-content: center;
+      max-height: 280px; overflow: hidden;
+    }
+    .preview-img-wrap img { max-width: 100%; max-height: 280px; object-fit: contain; display: block; }
+
+    /* ── Extract button ─────────────────────────────────────────── */
+    .btn-extract {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      font-size: 16px; font-weight: 600;
+      border: none; border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-extract:hover { opacity: 0.88; }
+    .btn-extract:active { transform: scale(0.99); }
+    .btn-extract:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-extract svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Loader ─────────────────────────────────────────────────── */
+    .loader { display: none; text-align: center; padding: 40px; }
+    .loader.visible { display: block; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader-text { font-size: 14px; color: var(--text-muted); }
+
+    /* ── Result panel ───────────────────────────────────────────── */
+    .result-panel { display: none; }
+    .result-panel.visible { display: block; }
+
+    .result-tabs {
+      display: flex; gap: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 8px 8px 0;
+    }
+    .tab-btn {
+      font-size: 13px; font-weight: 500;
+      background: none; border: none; color: var(--text-muted);
+      padding: 8px 16px; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      cursor: pointer; transition: color 0.15s, background 0.15s;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-btn.active {
+      color: var(--accent-light);
+      border-bottom-color: var(--accent);
+      background: var(--surface2);
+    }
+
+    .result-body {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      overflow: hidden;
+    }
+
+    /* plain text tab */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .plain-text-box {
+      padding: 20px 22px;
+      font-size: 15px; line-height: 1.8;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 120px;
+      color: var(--text);
+    }
+    .empty-msg { color: var(--text-muted); font-style: italic; font-size: 14px; }
+
+    /* json tab */
+    .json-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .json-label { font-size: 12px; color: var(--text-muted); font-family: monospace; }
+    .btn-copy, .btn-download {
+      font-size: 12px; color: var(--accent-light);
+      background: none; border: 1px solid rgba(108,99,255,0.3);
+      border-radius: var(--radius-sm); padding: 4px 12px;
+      cursor: pointer; transition: background 0.15s; margin-left: 6px;
+    }
+    .btn-copy:hover, .btn-download:hover { background: var(--accent-glow); }
+
+    .json-box {
+      padding: 18px 22px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 13px; line-height: 1.7;
+      overflow-x: auto;
+      max-height: 480px;
+      overflow-y: auto;
+      white-space: pre;
+    }
+    .j-key   { color: var(--json-key); }
+    .j-str   { color: var(--json-str); }
+    .j-num   { color: var(--json-num); }
+    .j-bool  { color: var(--json-bool); }
+    .j-null  { color: var(--text-muted); }
+    .j-punc  { color: var(--text-muted); }
+
+    /* stats strip */
+    .stats-strip {
+      display: flex; gap: 0;
+      border-top: 1px solid var(--border);
+    }
+    .stat {
+      flex: 1; text-align: center; padding: 14px 8px;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-val { font-size: 22px; font-weight: 700; color: var(--accent-light); }
+    .stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ── Error ──────────────────────────────────────────────────── */
+    .error-box {
+      display: none;
+      background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3);
+      border-radius: var(--radius); padding: 16px 20px;
+      font-size: 14px; color: var(--error);
+    }
+    .error-box.visible { display: block; }
+
+    /* ── Scrollbar ──────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 7h4l2-4h6l2 4h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="14" r="3"/></svg>
+    </div>
+    <span class="logo-text">OCR Tool</span>
+  </div>
+  <h1>Extract text from <span>any image</span></h1>
+  <p class="subtitle">Upload an image — get back structured JSON with every word, line, and bounding box.</p>
+</header>
+
+<main>
+
+  <!-- Upload zone -->
+  <div class="upload-zone" id="uploadZone">
+    <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/bmp,image/tiff,image/gif" />
+    <div class="upload-icon">
+      <svg viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+    </div>
+    <p class="upload-title">Drop your image here or click to browse</p>
+    <p class="upload-sub">Supports <strong>all common image formats</strong></p>
+    <div class="format-pills">
+      <span class="pill">PNG</span><span class="pill">JPG</span><span class="pill">JPEG</span>
+      <span class="pill">WEBP</span><span class="pill">BMP</span><span class="pill">TIFF</span><span class="pill">GIF</span>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-panel" id="previewPanel">
+    <div class="preview-header">
+      <div class="preview-header-left">
+        <img class="file-thumb" id="fileThumb" src="" alt="preview" />
+        <div>
+          <div class="file-name" id="fileName">—</div>
+          <div class="file-size" id="fileSize">—</div>
+        </div>
+      </div>
+      <button class="btn-change" id="btnChange">Change image</button>
+    </div>
+    <div class="preview-img-wrap">
+      <img id="previewImg" src="" alt="selected image" />
+    </div>
+  </div>
+
+  <!-- Extract button -->
+  <button class="btn-extract" id="btnExtract" disabled>
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    Extract Text
+  </button>
+
+  <!-- Loader -->
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <p class="loader-text">Reading image and extracting text…</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- Result -->
+  <div class="result-panel" id="resultPanel">
+    <div class="result-tabs">
+      <button class="tab-btn active" data-tab="plain">Plain Text</button>
+      <button class="tab-btn" data-tab="json">JSON Output</button>
+    </div>
+    <div class="result-body">
+
+      <!-- Plain text tab -->
+      <div class="tab-content active" id="tab-plain">
+        <div class="plain-text-box" id="plainText"></div>
+      </div>
+
+      <!-- JSON tab -->
+      <div class="tab-content" id="tab-json">
+        <div class="json-toolbar">
+          <span class="json-label">result.json</span>
+          <div>
+            <button class="btn-copy" id="btnCopy">Copy</button>
+            <button class="btn-download" id="btnDownload">⬇ Download JSON</button>
+          </div>
+        </div>
+        <div class="json-box" id="jsonBox"></div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-strip">
+        <div class="stat"><div class="stat-val" id="statWords">—</div><div class="stat-lbl">Words</div></div>
+        <div class="stat"><div class="stat-val" id="statLines">—</div><div class="stat-lbl">Lines</div></div>
+        <div class="stat"><div class="stat-val" id="statTime">—</div><div class="stat-lbl">Seconds</div></div>
+        <div class="stat"><div class="stat-val" id="statConf">—</div><div class="stat-lbl">Avg confidence</div></div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const fileInput   = document.getElementById('fileInput');
+  const uploadZone  = document.getElementById('uploadZone');
+  const previewPanel = document.getElementById('previewPanel');
+  const previewImg  = document.getElementById('previewImg');
+  const fileThumb   = document.getElementById('fileThumb');
+  const fileName    = document.getElementById('fileName');
+  const fileSize    = document.getElementById('fileSize');
+  const btnChange   = document.getElementById('btnChange');
+  const btnExtract  = document.getElementById('btnExtract');
+  const loader      = document.getElementById('loader');
+  const errorBox    = document.getElementById('errorBox');
+  const resultPanel = document.getElementById('resultPanel');
+  const plainText   = document.getElementById('plainText');
+  const jsonBox     = document.getElementById('jsonBox');
+  const btnCopy     = document.getElementById('btnCopy');
+  const btnDownload = document.getElementById('btnDownload');
+
+  let currentFile = null;
+  let lastJson    = null;
+
+  // ── Drag & Drop ──────────────────────────────────────────────
+  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) loadFile(file);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) loadFile(fileInput.files[0]);
+  });
+
+  btnChange.addEventListener('click', () => fileInput.click());
+
+  function loadFile(file) {
+    currentFile = file;
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    fileThumb.src = url;
+    fileName.textContent = file.name;
+    fileSize.textContent = formatBytes(file.size);
+    previewPanel.classList.add('visible');
+    btnExtract.disabled = false;
+    hideResults();
+  }
+
+  function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+    return (b/1048576).toFixed(1) + ' MB';
+  }
+
+  // ── Extract ──────────────────────────────────────────────────
+  btnExtract.addEventListener('click', async () => {
+    if (!currentFile) return;
+    hideResults();
+    loader.classList.add('visible');
+    btnExtract.disabled = true;
+
+    const formData = new FormData();
+    formData.append('image', currentFile);
+
+    try {
+      const res = await fetch('/ocr', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'OCR failed');
+
+      lastJson = data;
+      showResults(data);
+    } catch (err) {
+      errorBox.textContent = '⚠ ' + err.message;
+      errorBox.classList.add('visible');
+    } finally {
+      loader.classList.remove('visible');
+      btnExtract.disabled = false;
+    }
+  });
+
+  // ── Tabs ─────────────────────────────────────────────────────
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ── Render results ───────────────────────────────────────────
+  function showResults(data) {
+    const ocr = data.ocr;
+
+    // plain text
+    if (ocr.full_text && ocr.full_text.trim()) {
+      plainText.innerHTML = escapeHtml(ocr.full_text);
+    } else {
+      plainText.innerHTML = '<span class="empty-msg">No text detected in this image.</span>';
+    }
+
+    // stats
+    document.getElementById('statWords').textContent = ocr.word_count ?? 0;
+    document.getElementById('statLines').textContent = ocr.line_count ?? 0;
+    document.getElementById('statTime').textContent  = data.processing_time_seconds ?? '—';
+    const avgConf = ocr.words && ocr.words.length
+      ? (ocr.words.reduce((s,w) => s + w.confidence, 0) / ocr.words.length * 100).toFixed(1) + '%'
+      : '—';
+    document.getElementById('statConf').textContent = avgConf;
+
+    // syntax-highlighted JSON
+    jsonBox.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+
+    resultPanel.classList.add('visible');
+  }
+
+  function hideResults() {
+    resultPanel.classList.remove('visible');
+    errorBox.classList.remove('visible');
+    errorBox.textContent = '';
+  }
+
+  // ── Copy & Download ──────────────────────────────────────────
+  btnCopy.addEventListener('click', () => {
+    if (!lastJson) return;
+    navigator.clipboard.writeText(JSON.stringify(lastJson, null, 2)).then(() => {
+      btnCopy.textContent = 'Copied!';
+      setTimeout(() => btnCopy.textContent = 'Copy', 1800);
+    });
+  });
+
+  btnDownload.addEventListener('click', () => {
+    if (!lastJson) return;
+    const blob = new Blob([JSON.stringify(lastJson, null, 2)], { type: 'application/json' });
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    a.download = (lastJson.job_id || 'result') + '_ocr.json';
+    a.click();
+  });
+
+  // ── Helpers ──────────────────────────────────────────────────
+  function escapeHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function syntaxHighlight(json) {
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+\.?\d*(?:[eE][+\-]?\d+)?)/g, match => {
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) return '<span class="j-key">' + escapeHtml(match) + '</span>';
+        return '<span class="j-str">' + escapeHtml(match) + '</span>';
+      }
+      if (/true|false/.test(match)) return '<span class="j-bool">' + match + '</span>';
+      if (/null/.test(match))       return '<span class="j-null">' + match + '</span>';
+      return '<span class="j-num">' + match + '</span>';
+    });
+  }
+</script>
+</body>
+</html>
