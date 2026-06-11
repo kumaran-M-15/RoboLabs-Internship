@@ -1,0 +1,76 @@
+{
+  "job_id": "c1a5c321",
+  "timestamp": "2026-06-11T10:12:10.261023Z",
+  "source_file": "img_1.jpg",
+  "processing_time_seconds": 14.97,
+  "image": {
+    "width": 699,
+    "height": 439,
+    "mode": "RGB",
+    "format": "JPEG"
+  },
+  "ocr": {
+    "full_text": "It was the best of\ntimes,; it was the worst\nof times, it was the age\nof wisdom; it was the\nage of foolishness.",
+    "lines": [
+      "It was the best of",
+      "times,; it was the worst",
+      "of times, it was the age",
+      "of wisdom; it was the",
+      "age of foolishness."
+    ],
+    "words": [
+      {
+        "text": "It was the best of",
+        "confidence": 0.9782,
+        "bounding_box": {
+          "x_min": 13,
+          "y_min": 17,
+          "x_max": 539,
+          "y_max": 86
+        }
+      },
+      {
+        "text": "times,; it was the worst",
+        "confidence": 0.5501,
+        "bounding_box": {
+          "x_min": 7,
+          "y_min": 98,
+          "x_max": 682,
+          "y_max": 179
+        }
+      },
+      {
+        "text": "of times, it was the age",
+        "confidence": 0.626,
+        "bounding_box": {
+          "x_min": 9,
+          "y_min": 179,
+          "x_max": 697,
+          "y_max": 267
+        }
+      },
+      {
+        "text": "of wisdom; it was the",
+        "confidence": 0.844,
+        "bounding_box": {
+          "x_min": 11,
+          "y_min": 257,
+          "x_max": 647,
+          "y_max": 345
+        }
+      },
+      {
+        "text": "age of foolishness.",
+        "confidence": 0.8742,
+        "bounding_box": {
+          "x_min": 4,
+          "y_min": 345,
+          "x_max": 551,
+          "y_max": 436
+        }
+      }
+    ],
+    "word_count": 5,
+    "line_count": 5
+  }
+}

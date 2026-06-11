@@ -1,0 +1,105 @@
+{
+  "job_id": "6586c9e7",
+  "timestamp": "2026-06-11T10:11:38.525181Z",
+  "source_file": "img_2.jpg",
+  "processing_time_seconds": 9.861,
+  "image": {
+    "width": 380,
+    "height": 526,
+    "mode": "RGB",
+    "format": "JPEG"
+  },
+  "ocr": {
+    "full_text": "Jrrts IHOSE} Jar NOT ALL\n~Wandemg\nLost\nTAbAGGINS",
+    "lines": [
+      "Jrrts IHOSE} Jar NOT ALL",
+      "~Wandemg",
+      "Lost",
+      "TAbAGGINS"
+    ],
+    "words": [
+      {
+        "text": "ALL",
+        "confidence": 0.9859,
+        "bounding_box": {
+          "x_min": 130,
+          "y_min": 102,
+          "x_max": 206,
+          "y_max": 158
+        }
+      },
+      {
+        "text": "~Wandemg",
+        "confidence": 0.1248,
+        "bounding_box": {
+          "x_min": 96,
+          "y_min": 164,
+          "x_max": 304,
+          "y_max": 236
+        }
+      },
+      {
+        "text": "Lost",
+        "confidence": 0.3332,
+        "bounding_box": {
+          "x_min": 108,
+          "y_min": 248,
+          "x_max": 274,
+          "y_max": 326
+        }
+      },
+      {
+        "text": "TAbAGGINS",
+        "confidence": 0.0988,
+        "bounding_box": {
+          "x_min": 80,
+          "y_min": 328,
+          "x_max": 304,
+          "y_max": 384
+        }
+      },
+      {
+        "text": "Jrrts",
+        "confidence": 0.1121,
+        "bounding_box": {
+          "x_min": 255,
+          "y_min": 91,
+          "x_max": 307,
+          "y_max": 118
+        }
+      },
+      {
+        "text": "Jar",
+        "confidence": 0.7849,
+        "bounding_box": {
+          "x_min": 72,
+          "y_min": 96,
+          "x_max": 110,
+          "y_max": 118
+        }
+      },
+      {
+        "text": "IHOSE}",
+        "confidence": 0.4077,
+        "bounding_box": {
+          "x_min": 189,
+          "y_min": 92,
+          "x_max": 328,
+          "y_max": 176
+        }
+      },
+      {
+        "text": "NOT",
+        "confidence": 0.4315,
+        "bounding_box": {
+          "x_min": 54,
+          "y_min": 100,
+          "x_max": 142,
+          "y_max": 179
+        }
+      }
+    ],
+    "word_count": 8,
+    "line_count": 4
+  }
+}
