@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OCR Tool — Extract Text from Images</title>
+  <title>OCR & Gauge Reader Tool</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -38,7 +38,6 @@
       align-items: center;
     }
 
-    /* ── Header ─────────────────────────────────────────────────── */
     header {
       width: 100%;
       max-width: 860px;
@@ -63,7 +62,6 @@
     h1 span { color: var(--accent-light); }
     .subtitle { font-size: 15px; color: var(--text-muted); }
 
-    /* ── Main layout ────────────────────────────────────────────── */
     main {
       width: 100%;
       max-width: 860px;
@@ -73,7 +71,6 @@
       gap: 20px;
     }
 
-    /* ── Upload zone ────────────────────────────────────────────── */
     .upload-zone {
       border: 2px dashed var(--border-hover);
       border-radius: var(--radius);
@@ -114,7 +111,6 @@
       text-transform: uppercase;
     }
 
-    /* ── Preview panel ──────────────────────────────────────────── */
     .preview-panel {
       display: none;
       background: var(--surface);
@@ -148,7 +144,6 @@
     }
     .preview-img-wrap img { max-width: 100%; max-height: 280px; object-fit: contain; display: block; }
 
-    /* ── Extract button ─────────────────────────────────────────── */
     .btn-extract {
       width: 100%;
       background: var(--accent);
@@ -165,7 +160,6 @@
     .btn-extract:disabled { opacity: 0.4; cursor: not-allowed; }
     .btn-extract svg { width: 20px; height: 20px; stroke: white; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-    /* ── Loader ─────────────────────────────────────────────────── */
     .loader { display: none; text-align: center; padding: 40px; }
     .loader.visible { display: block; }
     .spinner {
@@ -179,7 +173,6 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .loader-text { font-size: 14px; color: var(--text-muted); }
 
-    /* ── Result panel ───────────────────────────────────────────── */
     .result-panel { display: none; }
     .result-panel.visible { display: block; }
 
@@ -211,7 +204,6 @@
       overflow: hidden;
     }
 
-    /* plain text tab */
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
@@ -225,7 +217,6 @@
     }
     .empty-msg { color: var(--text-muted); font-style: italic; font-size: 14px; }
 
-    /* json tab */
     .json-toolbar {
       display: flex; align-items: center; justify-content: space-between;
       padding: 10px 16px;
@@ -257,7 +248,6 @@
     .j-null  { color: var(--text-muted); }
     .j-punc  { color: var(--text-muted); }
 
-    /* stats strip */
     .stats-strip {
       display: flex; gap: 0;
       border-top: 1px solid var(--border);
@@ -270,7 +260,6 @@
     .stat-val { font-size: 22px; font-weight: 700; color: var(--accent-light); }
     .stat-lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    /* ── Error ──────────────────────────────────────────────────── */
     .error-box {
       display: none;
       background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3);
@@ -279,7 +268,6 @@
     }
     .error-box.visible { display: block; }
 
-    /* ── Scrollbar ──────────────────────────────────────────────── */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
@@ -292,15 +280,14 @@
     <div class="logo-icon">
       <svg viewBox="0 0 24 24"><path d="M3 7h4l2-4h6l2 4h4a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z"/><circle cx="12" cy="14" r="3"/></svg>
     </div>
-    <span class="logo-text">OCR Tool</span>
+    <span class="logo-text">OCR & Gauge Tool</span>
   </div>
-  <h1>Extract text from <span>any image</span></h1>
-  <p class="subtitle">Upload an image — get back structured JSON with every word, line, and bounding box.</p>
+  <h1>Extract metrics from <span>any image</span></h1>
+  <p class="subtitle">Upload images or instrumentation dial scales to parse standard text and analog needle readings.</p>
 </header>
 
 <main>
 
-  <!-- Upload zone -->
   <div class="upload-zone" id="uploadZone">
     <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg,image/webp,image/bmp,image/tiff,image/gif" />
     <div class="upload-icon">
@@ -314,7 +301,6 @@
     </div>
   </div>
 
-  <!-- Preview -->
   <div class="preview-panel" id="previewPanel">
     <div class="preview-header">
       <div class="preview-header-left">
@@ -331,35 +317,29 @@
     </div>
   </div>
 
-  <!-- Extract button -->
   <button class="btn-extract" id="btnExtract" disabled>
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    Extract Text
+    Analyze & Extract Value
   </button>
 
-  <!-- Loader -->
   <div class="loader" id="loader">
     <div class="spinner"></div>
-    <p class="loader-text">Reading image and extracting text…</p>
+    <p class="loader-text">Analyzing circular geometries and textures...</p>
   </div>
 
-  <!-- Error -->
   <div class="error-box" id="errorBox"></div>
 
-  <!-- Result -->
   <div class="result-panel" id="resultPanel">
     <div class="result-tabs">
-      <button class="tab-btn active" data-tab="plain">Plain Text</button>
+      <button class="tab-btn active" data-tab="plain">Plain Text & Gauge</button>
       <button class="tab-btn" data-tab="json">JSON Output</button>
     </div>
     <div class="result-body">
 
-      <!-- Plain text tab -->
       <div class="tab-content active" id="tab-plain">
         <div class="plain-text-box" id="plainText"></div>
       </div>
 
-      <!-- JSON tab -->
       <div class="tab-content" id="tab-json">
         <div class="json-toolbar">
           <span class="json-label">result.json</span>
@@ -371,7 +351,6 @@
         <div class="json-box" id="jsonBox"></div>
       </div>
 
-      <!-- Stats -->
       <div class="stats-strip">
         <div class="stat"><div class="stat-val" id="statWords">—</div><div class="stat-lbl">Words</div></div>
         <div class="stat"><div class="stat-val" id="statLines">—</div><div class="stat-lbl">Lines</div></div>
@@ -405,7 +384,6 @@
   let currentFile = null;
   let lastJson    = null;
 
-  // ── Drag & Drop ──────────────────────────────────────────────
   uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
   uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
   uploadZone.addEventListener('drop', e => {
@@ -439,7 +417,6 @@
     return (b/1048576).toFixed(1) + ' MB';
   }
 
-  // ── Extract ──────────────────────────────────────────────────
   btnExtract.addEventListener('click', async () => {
     if (!currentFile) return;
     hideResults();
@@ -453,7 +430,7 @@
       const res = await fetch('/ocr', { method: 'POST', body: formData });
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || 'OCR failed');
+      if (!res.ok) throw new Error(data.error || 'Processing failed');
 
       lastJson = data;
       showResults(data);
@@ -466,7 +443,6 @@
     }
   });
 
-  // ── Tabs ─────────────────────────────────────────────────────
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -476,29 +452,41 @@
     });
   });
 
-  // ── Render results ───────────────────────────────────────────
   function showResults(data) {
     const ocr = data.ocr;
+    let containerHTML = "";
 
-    // plain text
-    if (ocr.full_text && ocr.full_text.trim()) {
-      plainText.innerHTML = escapeHtml(ocr.full_text);
-    } else {
-      plainText.innerHTML = '<span class="empty-msg">No text detected in this image.</span>';
+    // Dynamic insertion of gauge indicator visualization cards
+    if (ocr.gauge_analysis && ocr.gauge_analysis.gauge_found) {
+      containerHTML += `
+        <div style="background: rgba(108,99,255,0.15); border: 2px solid var(--accent); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+          <h3 style="color: var(--accent-light); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">🎯 Gauge Analysis Reading</h3>
+          <p style="font-size: 42px; font-weight: 800; color: #ffffff; margin: 6px 0;">${ocr.gauge_analysis.interpolated_reading}</p>
+          <p style="font-size: 13px; color: var(--text-muted);">
+            Detected Pointer Axis Vector Angle: <strong style="color:var(--text);">${ocr.gauge_analysis.needle_angle_degrees}°</strong>
+          </p>
+        </div>
+      `;
     }
 
-    // stats
+    if (ocr.full_text && ocr.full_text.trim()) {
+      containerHTML += `<div style="margin-top:10px;"><h4 style="color:var(--text-muted); font-size:12px; text-transform:uppercase; margin-bottom:6px;">Raw OCR Strings:</h4>` + escapeHtml(ocr.full_text) + `</div>`;
+    } else if (!ocr.gauge_analysis || !ocr.gauge_analysis.gauge_found) {
+      containerHTML += '<span class="empty-msg">No target text or analog entities detected.</span>';
+    }
+
+    plainText.innerHTML = containerHTML;
+
     document.getElementById('statWords').textContent = ocr.word_count ?? 0;
     document.getElementById('statLines').textContent = ocr.line_count ?? 0;
     document.getElementById('statTime').textContent  = data.processing_time_seconds ?? '—';
+    
     const avgConf = ocr.words && ocr.words.length
       ? (ocr.words.reduce((s,w) => s + w.confidence, 0) / ocr.words.length * 100).toFixed(1) + '%'
       : '—';
     document.getElementById('statConf').textContent = avgConf;
 
-    // syntax-highlighted JSON
     jsonBox.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
-
     resultPanel.classList.add('visible');
   }
 
@@ -508,7 +496,6 @@
     errorBox.textContent = '';
   }
 
-  // ── Copy & Download ──────────────────────────────────────────
   btnCopy.addEventListener('click', () => {
     if (!lastJson) return;
     navigator.clipboard.writeText(JSON.stringify(lastJson, null, 2)).then(() => {
@@ -526,7 +513,6 @@
     a.click();
   });
 
-  // ── Helpers ──────────────────────────────────────────────────
   function escapeHtml(s) {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
